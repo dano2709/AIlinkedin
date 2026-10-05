@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..domain.detail import CanonicalCompany, CanonicalRecord
 from ..models import Company, Job, JobSnapshot, JobSource, JobState, WorkplaceType
-from .job_history import dedupe_fingerprint, snapshot_hashes, snapshot_payload
+from .job_history import snapshot_hashes, snapshot_payload
 
 
 @dataclass(slots=True)
@@ -46,7 +46,7 @@ class JobPersistenceService:
         )
         previous_hashes = self._last_snapshot_hashes(job) if not created else None
 
-        self._apply_job(job, canonical, company, search_run_id)
+        self._apply_job(job, canonical, company, search_run_id, preserve_source_identity=deduplicated)
         self._upsert_source(job, canonical, search_run_id, discovered_from)
         snapshot_created = self._create_snapshot_if_changed(
             job,
@@ -170,17 +170,14 @@ class JobPersistenceService:
 
         company_id = company.id if company else None
         company_name = company.normalized_name if company else None
-        fingerprint = dedupe_fingerprint(canonical, company_name)
 
         for candidate in candidates:
             score = 0
             if company_id and candidate.company_id == company_id:
                 score += 4
-            if (
-                dedupe_fingerprint(_canonical_from_job(candidate), company_name)
-                == fingerprint
-            ):
-                score += 4
+            elif company_name and candidate.company is not None:
+                if candidate.company.normalized_name == company_name:
+                    score += 4
             if candidate.city and canonical.city and candidate.city == canonical.city:
                 score += 2
             if (
@@ -189,6 +186,18 @@ class JobPersistenceService:
                 and candidate.location_raw == canonical.location_raw
             ):
                 score += 2
+            if (
+                candidate.job_function
+                and canonical.job_function
+                and candidate.job_function == canonical.job_function
+            ):
+                score += 1
+            if (
+                candidate.employment_type
+                and canonical.employment_type
+                and candidate.employment_type == canonical.employment_type
+            ):
+                score += 1
             if score >= 6:
                 return candidate
 
@@ -200,10 +209,13 @@ class JobPersistenceService:
         canonical: CanonicalRecord,
         company: Company | None,
         search_run_id: UUID | None,
+        *,
+        preserve_source_identity: bool = False,
     ) -> None:
         job.company_id = company.id if company else None
         job.source = canonical.source
-        job.source_job_id = canonical.source_id
+        if not preserve_source_identity:
+            job.source_job_id = canonical.source_id
         job.canonical_url = canonical.url
         job.title = canonical.title
         job.normalized_title = canonical.normalized_title
