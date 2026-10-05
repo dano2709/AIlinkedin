@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 
-from .domain import SearchQuery, SearchQueryCompiler
+from .domain import JobSearchInput, SearchQuery, SearchQueryCompiler
 from .providers.apify_linkedin import ApifyLinkedInAdapter, ProviderError
 from .schemas import (
     CompiledSearchResponse,
@@ -82,7 +82,7 @@ async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse
 
     try:
         candidates = await _apify_adapter().search(
-            __import__("apps.api.app.domain.providers", fromlist=["JobSearchInput"]).JobSearchInput(
+            JobSearchInput(
                 search_text=compiled.search_text,
                 provider_config=provider_config,
             )
