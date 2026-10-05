@@ -5,6 +5,11 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from .candidate_profile_schemas import (
+    CandidateProfileInput,
+    CandidateProfileResponse,
+    CandidateProfileUpdateResponse,
+)
 from .dashboard_schemas import (
     DashboardJobResponse,
     DashboardJobsResponse,
@@ -31,6 +36,7 @@ from .schemas import (
     ProviderSearchResponse,
     SearchQueryInput,
 )
+from .services.candidate_profile import CandidateProfileData, CandidateProfileService
 from .services.dashboard import DashboardService
 from .services.job_import import ApifyJobImportService
 from .settings import settings
@@ -45,7 +51,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.web_origin],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["*"],
 )
 
@@ -217,6 +223,79 @@ async def import_job(
     )
 
 
+
+
+
+def _candidate_profile_response(result: object, *, saved: bool = False) -> CandidateProfileResponse:
+    profile_result = result
+    profile = CandidateProfileInput.model_validate(asdict(profile_result.data))  # type: ignore[attr-defined]
+    payload = {
+        "user_id": profile_result.user_id,
+        "profile_id": profile_result.profile_id,
+        "exists": profile_result.exists,
+        "profile": profile,
+        "created_at": profile_result.created_at,
+        "updated_at": profile_result.updated_at,
+    }
+    if saved:
+        return CandidateProfileUpdateResponse(**payload, saved=True)
+    return CandidateProfileResponse(**payload)
+
+
+@app.get(
+    "/api/v1/profile",
+    response_model=CandidateProfileResponse,
+    tags=["candidate-profile"],
+)
+def get_candidate_profile(session: Session = db_dependency) -> CandidateProfileResponse:
+    user_id = UUID(settings.default_user_id)
+    result = CandidateProfileService(session).get(user_id)
+    return _candidate_profile_response(result)
+
+
+@app.put(
+    "/api/v1/profile",
+    response_model=CandidateProfileUpdateResponse,
+    tags=["candidate-profile"],
+)
+def update_candidate_profile(
+    payload: CandidateProfileInput,
+    session: Session = db_dependency,
+) -> CandidateProfileUpdateResponse:
+    user_id = UUID(settings.default_user_id)
+    data = CandidateProfileData(
+        full_name=payload.full_name,
+        headline=payload.headline,
+        summary=payload.summary,
+        target_titles=payload.target_titles,
+        skills=payload.skills,
+        technologies=payload.technologies,
+        certifications=payload.certifications,
+        education=payload.education,
+        languages=payload.languages,
+        industries=payload.industries,
+        preferred_locations=payload.preferred_locations,
+        preferred_countries=payload.preferred_countries,
+        workplace_types=payload.workplace_types,
+        employment_types=payload.employment_types,
+        seniority=payload.seniority,
+        preferred_companies=payload.preferred_companies,
+        excluded_companies=payload.excluded_companies,
+        excluded_keywords=payload.excluded_keywords,
+        min_salary=str(payload.min_salary) if payload.min_salary is not None else None,
+        salary_currency=payload.salary_currency,
+        years_experience=(
+            str(payload.years_experience) if payload.years_experience is not None else None
+        ),
+        willing_to_relocate=payload.willing_to_relocate,
+    )
+    try:
+        result = CandidateProfileService(session).upsert(user_id, data)
+        session.commit()
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="candidate profile save failed") from exc
+    return _candidate_profile_response(result, saved=True)
 
 @app.get(
     "/api/v1/dashboard/overview",
