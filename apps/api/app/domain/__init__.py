@@ -1,3 +1,4 @@
+from .detail import CanonicalCompany, CanonicalRecord, JobDetailExtractor
 from .providers import (
     JobDetailInput,
     JobDetailResult,
@@ -8,7 +9,10 @@ from .providers import (
 from .search import CompiledSearch, PostFilters, SearchQuery, SearchQueryCompiler
 
 __all__ = [
+    "CanonicalCompany",
+    "CanonicalRecord",
     "CompiledSearch",
+    "JobDetailExtractor",
     "JobDetailInput",
     "JobDetailResult",
     "JobSearchCandidate",
