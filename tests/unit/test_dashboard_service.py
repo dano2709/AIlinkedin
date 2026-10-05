@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from apps.api.app.domain.detail import CanonicalRecord
 from apps.api.app.models import Company, JobState, WorkplaceType
 from apps.api.app.services.dashboard import DashboardService
 
