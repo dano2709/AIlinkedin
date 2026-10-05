@@ -138,6 +138,8 @@ class ApifyLinkedInAdapter:
             payload["under10Applicants"] = True
 
         workplace_types = [str(value).upper() for value in config.get("workplace_types", [])]
+        if not workplace_types and config.get("remote") is True:
+            workplace_types = ["REMOTE"]
         work_type_map = {"ON_SITE": "1", "REMOTE": "2", "HYBRID": "3"}
         mapped_work_types = [
             work_type_map[value] for value in workplace_types if value in work_type_map
