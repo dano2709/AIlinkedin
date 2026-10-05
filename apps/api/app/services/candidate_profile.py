@@ -93,14 +93,12 @@ class CandidateProfileService:
         self.session = session
 
     def get(self, user_id: UUID) -> CandidateProfileResult:
-        user = self._get_user(user_id)
-        profile = self.session.execute(
-            select(CandidateProfile).where(CandidateProfile.user_id == user.id)
+        user = self.session.execute(
+            select(User).where(User.id == user_id)
         ).scalars().first()
-
-        if profile is None:
+        if user is None:
             return CandidateProfileResult(
-                user_id=user.id,
+                user_id=user_id,
                 profile_id=None,
                 data=self._empty_data(),
                 exists=False,
