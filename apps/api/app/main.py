@@ -1,16 +1,33 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from .domain import SearchQuery, SearchQueryCompiler
-from .schemas import CompiledSearchResponse, SearchQueryInput
+from .providers.apify_linkedin import ApifyLinkedInAdapter, ProviderError
+from .schemas import (
+    CompiledSearchResponse,
+    JobCandidateResponse,
+    ProviderSearchResponse,
+    SearchQueryInput,
+)
 from .settings import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.2.0",
+    version="0.3.0",
     description="LinkedIn Job Intelligence API",
 )
 
 compiler = SearchQueryCompiler()
+
+
+def _apify_adapter() -> ApifyLinkedInAdapter:
+    if not settings.apify_api_token:
+        raise HTTPException(status_code=503, detail="Apify provider is not configured")
+    return ApifyLinkedInAdapter(
+        token=settings.apify_api_token,
+        actor_id=settings.apify_actor_id,
+        base_url=settings.apify_base_url,
+        timeout_seconds=settings.apify_timeout_seconds,
+    )
 
 
 @app.get("/health", tags=["system"])
@@ -22,8 +39,8 @@ def health() -> dict[str, str]:
 def meta() -> dict[str, str]:
     return {
         "name": settings.app_name,
-        "version": "0.2.0",
-        "status": "phase-2",
+        "version": "0.3.0",
+        "status": "phase-3",
     }
 
 
@@ -38,12 +55,55 @@ def compile_search(payload: SearchQueryInput) -> CompiledSearchResponse:
             "titles": compiled.deterministic_filters.titles,
             "locations": compiled.deterministic_filters.locations,
             "remote": compiled.deterministic_filters.remote,
+            "workplace_types": compiled.deterministic_filters.workplace_types,
             "employment_types": compiled.deterministic_filters.employment_types,
             "seniority": compiled.deterministic_filters.seniority,
             "companies": compiled.deterministic_filters.companies,
             "posted_within_days": compiled.deterministic_filters.posted_within_days,
             "exclude_keywords": compiled.deterministic_filters.exclude_keywords,
+            "easy_apply": compiled.deterministic_filters.easy_apply,
+            "under10_applicants": compiled.deterministic_filters.under10_applicants,
         },
         ai_constraints=compiled.ai_constraints,
         unsupported_constraints=compiled.unsupported_constraints,
+    )
+
+
+@app.post("/api/v1/providers/apify/search", response_model=ProviderSearchResponse, tags=["provider"])
+async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse:
+    compiled = compiler.compile(SearchQuery(**payload.model_dump()))
+
+    provider_config = dict(compiled.structured_constraints)
+    provider_config["rows"] = settings.apify_default_rows
+    provider_config["source_url"] = compiled.linkedin_url if payload.source_url else None
+
+    # Import filtering remains deterministic and provider-independent.
+    provider_config["exclude_keywords"] = compiled.deterministic_filters.exclude_keywords
+
+    try:
+        candidates = await _apify_adapter().search(
+            __import__("apps.api.app.domain.providers", fromlist=["JobSearchInput"]).JobSearchInput(
+                search_text=compiled.search_text,
+                provider_config=provider_config,
+            )
+        )
+    except ProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return ProviderSearchResponse(
+        provider="apify-linkedin",
+        count=len(candidates),
+        candidates=[
+            JobCandidateResponse(
+                source=c.source,
+                source_job_id=c.source_job_id,
+                job_url=c.job_url,
+                title=c.title,
+                company_name=c.company_name,
+                location=c.location,
+                posted_text=c.posted_text,
+                provenance=c.provenance or {},
+            )
+            for c in candidates
+        ],
     )
