@@ -28,6 +28,11 @@ Implemented foundation:
 - dashboard overview, jobs and search-run APIs
 - live Next.js dashboard with job search and remote filter
 - browser-to-API CORS configuration
+- candidate profile schema and normalization
+- candidate profile PostgreSQL persistence
+- explainable AI job scoring
+- CandidateJobScore and JobAIAnalysis persistence
+- cached per-profile/job scoring with force recalculation
 - typed candidate profile schema and normalization
 - candidate profile PostgreSQL persistence
 - candidate profile GET/PUT API
@@ -52,6 +57,20 @@ Recent search runs:
 The dashboard reads persisted canonical data. Scraping and provider credentials remain on the backend.
 
 The dashboard is intentionally unauthenticated at this stage. User-specific scoping will be added with candidate/authentication work.
+
+## Phase 8 AI scoring API
+
+Score a persisted job against the development candidate profile:
+
+POST /api/v1/jobs/{job_id}/score
+
+Read a cached score:
+
+GET /api/v1/jobs/{job_id}/score
+
+The scoring model returns a validated 100-point breakdown and the backend calculates the final fit score from those components. AI reasoning is stored separately as JobAIAnalysis; the current profile/job score is stored in CandidateJobScore.
+
+The default model is gpt-6-luna and the integration uses the OpenAI Responses API. The OpenAI key is server-side only.
 
 ## Phase 7 candidate profile API
 
@@ -95,6 +114,7 @@ Web: http://localhost:3000
 5. Normalization, deduplication and history — complete
 6. Dashboard data integration — complete
 7. Candidate profile — complete
+8. AI scoring — complete
 8. AI scoring
 9. Notifications
 10. Provider fallback
