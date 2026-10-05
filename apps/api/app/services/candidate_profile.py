@@ -106,6 +106,19 @@ class CandidateProfileService:
                 updated_at=None,
             )
 
+        profile = self.session.execute(
+            select(CandidateProfile).where(CandidateProfile.user_id == user.id)
+        ).scalars().first()
+        if profile is None:
+            return CandidateProfileResult(
+                user_id=user.id,
+                profile_id=None,
+                data=self._empty_data(),
+                exists=False,
+                created_at=None,
+                updated_at=None,
+            )
+
         return CandidateProfileResult(
             user_id=user.id,
             profile_id=profile.id,
