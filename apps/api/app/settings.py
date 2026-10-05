@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     apify_base_url: str = "https://api.apify.com/v2"
     apify_timeout_seconds: float = 180.0
     apify_default_rows: int = Field(default=25, ge=1, le=1000)
+    default_user_id: str = "00000000-0000-0000-0000-000000000001"
 
     model_config = SettingsConfigDict(
         env_file=".env",
