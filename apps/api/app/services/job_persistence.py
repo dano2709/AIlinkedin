@@ -175,9 +175,12 @@ class JobPersistenceService:
             score = 0
             if company_id and candidate.company_id == company_id:
                 score += 4
-            elif company_name and candidate.company is not None:
-                if candidate.company.normalized_name == company_name:
-                    score += 4
+            elif (
+                company_name
+                and candidate.company is not None
+                and candidate.company.normalized_name == company_name
+            ):
+                score += 4
             if candidate.city and canonical.city and candidate.city == canonical.city:
                 score += 2
             if (
