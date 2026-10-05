@@ -25,6 +25,9 @@ class ApifyJobImportService:
     ) -> PersistenceResult:
         result = await self.adapter.get_job_details(job)
         canonical = self.extractor.extract(result.raw, provenance=result.provenance)
+        source_url = result.provenance.get("source_url")
+        if discovered_from is None and isinstance(source_url, str):
+            discovered_from = source_url
         return self.persistence.upsert(
             canonical,
             search_run_id=search_run_id,
