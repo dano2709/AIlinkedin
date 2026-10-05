@@ -40,6 +40,12 @@ type JobsResponse = {
   jobs: Job[];
 };
 
+type JobScore = {
+  fit_score: number;
+  recommendation: string;
+  summary: string;
+};
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function formatSalary(job: Job) {
@@ -75,6 +81,8 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scores, setScores] = useState<Record<string, JobScore>>({});
+  const [scoringJobId, setScoringJobId] = useState<string | null>(null);
 
   const jobQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -83,6 +91,27 @@ export default function DashboardClient() {
     if (remoteOnly) params.set("remote_only", "true");
     return params.toString();
   }, [query, remoteOnly]);
+
+  async function scoreJob(jobId: string) {
+    setScoringJobId(jobId);
+    setError(null);
+    try {
+      const response = await fetch(API_URL + "/api/v1/jobs/" + jobId + "/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: false }),
+      });
+      if (!response.ok) {
+        throw new Error("API " + response.status);
+      }
+      const score = (await response.json()) as JobScore;
+      setScores((current) => ({ ...current, [jobId]: score }));
+    } catch {
+      setError("Job scoring failed. Check the candidate profile and AI configuration.");
+    } finally {
+      setScoringJobId(null);
+    }
+  }
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -179,6 +208,7 @@ export default function DashboardClient() {
                   <th>Salary</th>
                   <th>Applicants</th>
                   <th>Discovered</th>
+                  <th>Fit</th>
                   <th />
                 </tr>
               </thead>
@@ -195,6 +225,21 @@ export default function DashboardClient() {
                     <td>{formatSalary(job)}</td>
                     <td>{job.applicant_count ?? "—"}</td>
                     <td>{formatDate(job.discovered_at)}</td>
+                    <td>
+                      {scores[job.id] ? (
+                        <span className="score-pill">
+                          {scores[job.id].fit_score}
+                        </span>
+                      ) : (
+                        <button
+                          className="score-button"
+                          onClick={() => void scoreJob(job.id)}
+                          disabled={scoringJobId === job.id}
+                        >
+                          {scoringJobId === job.id ? "Scoring…" : "Score"}
+                        </button>
+                      )}
+                    </td>
                     <td>
                       {job.external_apply_url || job.apply_url ? (
                         <a
