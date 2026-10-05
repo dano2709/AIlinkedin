@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from types import SimpleNamespace
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 from apps.api.app.domain.detail import CanonicalCompany, CanonicalRecord
 from apps.api.app.models import Company, Job
@@ -70,7 +70,7 @@ def test_upsert_creates_job_and_snapshot(monkeypatch) -> None:
     session = MagicMock()
     service = JobPersistenceService(session)
     company = Company(
-        id=__import__("uuid").uuid4(),
+        id=uuid4(),
         source="linkedin",
         source_company_id="c1",
         name="Example",
