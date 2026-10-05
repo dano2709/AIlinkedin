@@ -34,6 +34,7 @@ app = FastAPI(
 
 compiler = SearchQueryCompiler()
 detail_extractor = JobDetailExtractor()
+db_dependency = Depends(get_db)
 
 
 def _apify_adapter() -> ApifyLinkedInAdapter:
@@ -157,7 +158,7 @@ async def detail_with_apify(payload: JobDetailRequest) -> JobDetailResponse:
 )
 async def import_job(
     payload: JobImportRequest,
-    session: Session = Depends(get_db),
+    session: Session = db_dependency,
 ) -> JobImportResponse:
     search_run_id = None
     if payload.search_run_id:
