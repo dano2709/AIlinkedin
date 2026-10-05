@@ -1,7 +1,10 @@
 from dataclasses import asdict
+from uuid import UUID
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
 
+from .db import get_db
 from .domain import (
     JobDetailExtractor,
     JobDetailInput,
@@ -15,14 +18,17 @@ from .schemas import (
     JobCandidateResponse,
     JobDetailRequest,
     JobDetailResponse,
+    JobImportRequest,
+    JobImportResponse,
     ProviderSearchResponse,
     SearchQueryInput,
 )
+from .services.job_import import ApifyJobImportService
 from .settings import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
+    version="0.5.0",
     description="LinkedIn Job Intelligence API",
 )
 
@@ -50,8 +56,8 @@ def health() -> dict[str, str]:
 def meta() -> dict[str, str]:
     return {
         "name": settings.app_name,
-        "version": "0.4.0",
-        "status": "phase-4",
+        "version": "0.5.0",
+        "status": "phase-5",
     }
 
 
@@ -82,14 +88,12 @@ def compile_search(payload: SearchQueryInput) -> CompiledSearchResponse:
 
 @app.get("/api/v1/providers/apify/health", tags=["provider"])
 async def apify_health() -> dict[str, object]:
-    adapter = _apify_adapter()
-    return await adapter.health_check()
+    return await _apify_adapter().health_check()
 
 
 @app.post("/api/v1/providers/apify/search", response_model=ProviderSearchResponse, tags=["provider"])
 async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse:
     compiled = compiler.compile(SearchQuery(**payload.model_dump()))
-
     provider_config = dict(compiled.structured_constraints)
     provider_config["rows"] = settings.apify_default_rows
     provider_config["source_url"] = (
@@ -128,11 +132,7 @@ async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse
     )
 
 
-@app.post(
-    "/api/v1/providers/apify/details",
-    response_model=JobDetailResponse,
-    tags=["provider"],
-)
+@app.post("/api/v1/providers/apify/details", response_model=JobDetailResponse, tags=["provider"])
 async def detail_with_apify(payload: JobDetailRequest) -> JobDetailResponse:
     try:
         result = await _apify_adapter().get_job_details(
@@ -141,13 +141,59 @@ async def detail_with_apify(payload: JobDetailRequest) -> JobDetailResponse:
                 job_url=payload.job_url,
             )
         )
-        canonical = detail_extractor.extract(
-            result.raw,
-            provenance=result.provenance,
-        )
+        canonical = detail_extractor.extract(result.raw, provenance=result.provenance)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ProviderError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return JobDetailResponse.model_validate(asdict(canonical))
+
+
+@app.post(
+    "/api/v1/jobs/import",
+    response_model=JobImportResponse,
+    tags=["jobs"],
+)
+async def import_job(
+    payload: JobImportRequest,
+    session: Session = Depends(get_db),
+) -> JobImportResponse:
+    search_run_id = None
+    if payload.search_run_id:
+        try:
+            search_run_id = UUID(payload.search_run_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="invalid search_run_id") from exc
+
+    service = ApifyJobImportService(session, _apify_adapter())
+    try:
+        result = await service.import_job(
+            JobDetailInput(
+                source_job_id=payload.source_job_id,
+                job_url=payload.job_url,
+            ),
+            search_run_id=search_run_id,
+            discovered_from=payload.discovered_from,
+        )
+        session.commit()
+    except ValueError as exc:
+        session.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ProviderError as exc:
+        session.rollback()
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="job persistence failed") from exc
+
+    return JobImportResponse(
+        job_id=str(result.job.id),
+        source=result.job.source,
+        source_job_id=result.job.source_job_id,
+        title=result.job.title,
+        created=result.created,
+        deduplicated=result.deduplicated,
+        snapshot_created=result.snapshot_created,
+        company_created=result.company_created,
+    )
