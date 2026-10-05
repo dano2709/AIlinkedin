@@ -46,7 +46,7 @@ Web: http://localhost:3000
 
 1. Repository foundation
 2. Database/domain models and search compiler — complete
-3. Search provider integration
+3. Search provider integration — Apify LinkedIn adapter complete
 4. Job detail extraction
 5. Normalization, deduplication and history
 6. Dashboard data integration
