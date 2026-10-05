@@ -47,7 +47,7 @@ from .settings import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.6.0",
+    version="0.7.0",
     description="LinkedIn Job Intelligence API",
 )
 
@@ -84,8 +84,8 @@ def health() -> dict[str, str]:
 def meta() -> dict[str, str]:
     return {
         "name": settings.app_name,
-        "version": "0.6.0",
-        "status": "phase-6",
+        "version": "0.7.0",
+        "status": "phase-7",
     }
 
 
