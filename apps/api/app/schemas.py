@@ -73,10 +73,26 @@ class JobDetailRequest(BaseModel):
     job_url: str | None = None
 
     @model_validator(mode="after")
-    def require_identifier(self) -> "JobDetailRequest":
+    def require_identifier(self) -> JobDetailRequest:
         if not self.source_job_id and not self.job_url:
             raise ValueError("source_job_id or job_url is required")
         return self
+
+
+class JobImportRequest(JobDetailRequest):
+    search_run_id: str | None = None
+    discovered_from: str | None = None
+
+
+class JobImportResponse(BaseModel):
+    job_id: str
+    source: str
+    source_job_id: str
+    title: str
+    created: bool
+    deduplicated: bool
+    snapshot_created: bool
+    company_created: bool
 
 
 class CompanyDetailResponse(BaseModel):
