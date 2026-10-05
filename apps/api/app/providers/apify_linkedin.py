@@ -70,11 +70,10 @@ class ApifyLinkedInAdapter:
         )
 
     async def health_check(self) -> dict[str, Any]:
-        url = f"{self.base_url}/acts/{self._actor_path()}"
-        params = {"token": self.token}
+        url = f"{self.base_url}/actors/{self._actor_path()}"
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.get(url, params=params)
+                response = await client.get(url, headers=self._headers())
                 response.raise_for_status()
         except httpx.HTTPError as exc:
             return {"status": "unhealthy", "provider": self.name, "error": str(exc)}
@@ -83,14 +82,17 @@ class ApifyLinkedInAdapter:
 
     async def _run_actor(self, payload: dict[str, Any]) -> list[dict[str, Any]]:
         url = (
-            f"{self.base_url}/acts/{self._actor_path()}/"
+            f"{self.base_url}/actors/{self._actor_path()}/"
             "run-sync-get-dataset-items"
         )
-        params = {"token": self.token}
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
-                response = await client.post(url, params=params, json=payload)
+                response = await client.post(
+                    url,
+                    headers=self._headers(),
+                    json=payload,
+                )
                 response.raise_for_status()
         except httpx.TimeoutException as exc:
             raise ProviderError("Apify request timed out") from exc
@@ -106,6 +108,13 @@ class ApifyLinkedInAdapter:
         if not isinstance(data, list):
             raise ProviderError("Apify returned an unexpected dataset response")
         return [row for row in data if isinstance(row, dict)]
+
+    def _headers(self) -> dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
     def _actor_path(self) -> str:
         return self.actor_id.replace("/", "~", 1)
