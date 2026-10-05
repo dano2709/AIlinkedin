@@ -36,7 +36,11 @@ from .schemas import (
     ProviderSearchResponse,
     SearchQueryInput,
 )
-from .services.candidate_profile import CandidateProfileData, CandidateProfileService
+from .services.candidate_profile import (
+    CandidateProfileData,
+    CandidateProfileResult,
+    CandidateProfileService,
+)
 from .services.dashboard import DashboardService
 from .services.job_import import ApifyJobImportService
 from .settings import settings
@@ -226,16 +230,19 @@ async def import_job(
 
 
 
-def _candidate_profile_response(result: object, *, saved: bool = False) -> CandidateProfileResponse:
-    profile_result = result
-    profile = CandidateProfileInput.model_validate(asdict(profile_result.data))  # type: ignore[attr-defined]
+def _candidate_profile_response(
+    result: CandidateProfileResult,
+    *,
+    saved: bool = False,
+) -> CandidateProfileResponse:
+    profile = CandidateProfileInput.model_validate(asdict(result.data))
     payload = {
-        "user_id": profile_result.user_id,
-        "profile_id": profile_result.profile_id,
-        "exists": profile_result.exists,
+        "user_id": result.user_id,
+        "profile_id": result.profile_id,
+        "exists": result.exists,
         "profile": profile,
-        "created_at": profile_result.created_at,
-        "updated_at": profile_result.updated_at,
+        "created_at": result.created_at,
+        "updated_at": result.updated_at,
     }
     if saved:
         return CandidateProfileUpdateResponse(**payload, saved=True)
