@@ -12,7 +12,8 @@ dependencies = [
   "psycopg[binary]>=3.2,<4.0",
   "alembic>=1.17,<2.0",
   "redis>=6.4,<7.0",
-  "dramatiq[redis]>=2.0,<3.0"
+  "dramatiq[redis]>=2.0,<3.0",
+  "openai>=3.24,<4.0"
 ]
 
 [project.optional-dependencies]
