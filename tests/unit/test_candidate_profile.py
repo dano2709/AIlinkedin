@@ -4,12 +4,10 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from apps.api.app.domain.detail import CanonicalRecord
-from apps.api.app.main import app
+from apps.api.app.main import app, get_db
 from apps.api.app.services.candidate_profile import (
     CandidateProfileData,
     CandidateProfileResult,
-    CandidateProfileService,
     normalize_profile,
 )
 
@@ -80,27 +78,35 @@ class FakeProfileService:
 
 def test_profile_endpoints(monkeypatch: Any) -> None:
     monkeypatch.setattr("apps.api.app.main.CandidateProfileService", FakeProfileService)
-    response = TestClient(app).get("/api/v1/profile")
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["exists"] is True
-    assert body["profile"]["salary_currency"] == "czk"
+    def fake_db() -> Any:
+        yield object()
 
-    response = TestClient(app).put(
-        "/api/v1/profile",
-        json={
-            "full_name": " Daniel   Test ",
-            "target_titles": ["Python Engineer", "python engineer"],
-            "skills": ["Python", " python "],
-            "salary_currency": "czk",
-            "willing_to_relocate": True,
-        },
-    )
+    app.dependency_overrides[get_db] = fake_db
+    try:
+        response = TestClient(app).get("/api/v1/profile")
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["saved"] is True
-    assert body["profile"]["full_name"] == "Daniel Test"
-    assert body["profile"]["target_titles"] == ["Python Engineer"]
-    assert body["profile"]["salary_currency"] == "CZK"
+        assert response.status_code == 200
+        body = response.json()
+        assert body["exists"] is True
+        assert body["profile"]["salary_currency"] == "CZK"
+
+        response = TestClient(app).put(
+            "/api/v1/profile",
+            json={
+                "full_name": " Daniel   Test ",
+                "target_titles": ["Python Engineer", "python engineer"],
+                "skills": ["Python", " python "],
+                "salary_currency": "czk",
+                "willing_to_relocate": True,
+            },
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["saved"] is True
+        assert body["profile"]["full_name"] == "Daniel Test"
+        assert body["profile"]["target_titles"] == ["Python Engineer"]
+        assert body["profile"]["salary_currency"] == "CZK"
+    finally:
+        app.dependency_overrides.clear()
