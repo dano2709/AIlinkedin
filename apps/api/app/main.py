@@ -4,6 +4,13 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
+from .dashboard_schemas import (
+    DashboardJobResponse,
+    DashboardJobsResponse,
+    DashboardOverviewResponse,
+    DashboardSearchRunResponse,
+    DashboardSearchRunsResponse,
+)
 from .db import get_db
 from .domain import (
     JobDetailExtractor,
@@ -23,12 +30,13 @@ from .schemas import (
     ProviderSearchResponse,
     SearchQueryInput,
 )
+from .services.dashboard import DashboardService
 from .services.job_import import ApifyJobImportService
 from .settings import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.5.0",
+    version="0.6.0",
     description="LinkedIn Job Intelligence API",
 )
 
@@ -57,8 +65,8 @@ def health() -> dict[str, str]:
 def meta() -> dict[str, str]:
     return {
         "name": settings.app_name,
-        "version": "0.5.0",
-        "status": "phase-5",
+        "version": "0.6.0",
+        "status": "phase-6",
     }
 
 
@@ -197,4 +205,68 @@ async def import_job(
         deduplicated=result.deduplicated,
         snapshot_created=result.snapshot_created,
         company_created=result.company_created,
+    )
+
+
+
+@app.get(
+    "/api/v1/dashboard/overview",
+    response_model=DashboardOverviewResponse,
+    tags=["dashboard"],
+)
+def dashboard_overview(session: Session = db_dependency) -> DashboardOverviewResponse:
+    overview = DashboardService(session).overview()
+    return DashboardOverviewResponse(**overview.__dict__)
+
+
+@app.get(
+    "/api/v1/dashboard/jobs",
+    response_model=DashboardJobsResponse,
+    tags=["dashboard"],
+)
+def dashboard_jobs(
+    offset: int = 0,
+    limit: int = 50,
+    query: str | None = None,
+    state: str | None = None,
+    remote_only: bool = False,
+    country_code: str | None = None,
+    session: Session = db_dependency,
+) -> DashboardJobsResponse:
+    if offset < 0:
+        raise HTTPException(status_code=422, detail="offset must be >= 0")
+    if limit < 1 or limit > 100:
+        raise HTTPException(status_code=422, detail="limit must be between 1 and 100")
+
+    total, jobs = DashboardService(session).list_jobs(
+        offset=offset,
+        limit=limit,
+        query=query,
+        state=state,
+        remote_only=remote_only,
+        country_code=country_code,
+    )
+    return DashboardJobsResponse(
+        total=total,
+        offset=offset,
+        limit=limit,
+        jobs=[DashboardJobResponse(**job.__dict__) for job in jobs],
+    )
+
+
+@app.get(
+    "/api/v1/dashboard/search-runs",
+    response_model=DashboardSearchRunsResponse,
+    tags=["dashboard"],
+)
+def dashboard_search_runs(
+    limit: int = 10,
+    session: Session = db_dependency,
+) -> DashboardSearchRunsResponse:
+    if limit < 1 or limit > 50:
+        raise HTTPException(status_code=422, detail="limit must be between 1 and 50")
+
+    runs = DashboardService(session).recent_search_runs(limit=limit)
+    return DashboardSearchRunsResponse(
+        runs=[DashboardSearchRunResponse(**run.__dict__) for run in runs],
     )
