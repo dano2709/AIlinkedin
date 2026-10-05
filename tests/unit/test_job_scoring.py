@@ -1,8 +1,6 @@
 from decimal import Decimal
 from types import SimpleNamespace
-from uuid import uuid4
 
-import pytest
 
 from apps.api.app.providers.openai_scoring import OpenAIResponsesScoringProvider
 from apps.api.app.scoring_schemas import AIJobScoreResult
@@ -70,5 +68,9 @@ def test_openai_provider_parses_response_json() -> None:
     provider = OpenAIResponsesScoringProvider("test-key")
     provider.client = SimpleNamespace(responses=FakeResponses())
 
-    result = pytest.run(async_fn=provider.score, profile=profile, job_payload={"title": "Developer"}) if False else None
-    assert result is None
+    import asyncio
+
+    result = asyncio.run(
+        provider.score(profile, {"title": "Developer"})
+    )
+    assert result.fit_score if False else result.recommendation == "strong_match"
