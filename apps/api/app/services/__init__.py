@@ -12,7 +12,7 @@ __all__ = [
     "DashboardService",
     "JobPersistenceService",
     "JobScoringService",
+    "PersistenceResult",
     "ScoringProviderError",
     "weighted_fit_score",
-    "PersistenceResult",
 ]
