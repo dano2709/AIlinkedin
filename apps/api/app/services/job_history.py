@@ -15,7 +15,7 @@ def _stable(value: Any) -> str:
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, (list, tuple)):
-        return json.dumps(list(value), ensure_ascii=False, sort_keys=True)
+        return json.dumps(list(value), ensure_ascii=False, sort_keys=True, default=str)
     if isinstance(value, dict):
         return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
     return str(value or "")
