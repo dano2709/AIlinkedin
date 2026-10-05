@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -80,7 +81,7 @@ def test_profile_endpoints(monkeypatch: Any) -> None:
     monkeypatch.setattr("apps.api.app.main.CandidateProfileService", FakeProfileService)
 
     def fake_db() -> Any:
-        yield object()
+        yield MagicMock()
 
     app.dependency_overrides[get_db] = fake_db
     try:
