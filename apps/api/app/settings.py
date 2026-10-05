@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     apify_api_token: str = ""
+    openai_api_key: str = ""
     apify_actor_id: str = Field(default="bebity/linkedin-jobs-scraper")
     apify_base_url: str = "https://api.apify.com/v2"
     apify_timeout_seconds: float = 180.0
