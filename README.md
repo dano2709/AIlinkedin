@@ -4,7 +4,7 @@ Production-oriented LinkedIn Job Intelligence application.
 
 ## Current status
 
-Phase 5 is implemented.
+Phase 6 is implemented.
 
 Implemented foundation:
 - FastAPI backend
@@ -24,40 +24,36 @@ Implemented foundation:
 - deterministic job identity and deduplication
 - source provenance records
 - change-only historical snapshots
+- dashboard read service over PostgreSQL
+- dashboard overview, jobs and search-run APIs
+- live Next.js dashboard with job search and remote filter
+- browser-to-API CORS configuration
 - unit and API contract tests
 - GitHub Actions CI
+
+## Phase 6 dashboard API
+
+Overview:
+
+`GET /api/v1/dashboard/overview`
+
+Job inventory:
+
+`GET /api/v1/dashboard/jobs?limit=50&query=python&remote_only=true`
+
+Recent search runs:
+
+`GET /api/v1/dashboard/search-runs?limit=10`
+
+The dashboard reads persisted canonical data. Scraping and provider credentials remain on the backend.
+
+The dashboard is intentionally unauthenticated at this stage. User-specific scoping will be added with candidate/authentication work.
 
 ## Phase 5 persistence API
 
 Import one LinkedIn job from Apify and persist it:
 
 `POST /api/v1/jobs/import`
-
-Example:
-
-```json
-{
-  "source_job_id": "4459772101",
-  "discovered_from": "manual"
-}
-```
-
-The import flow:
-1. Fetches the current job detail from Apify.
-2. Normalizes it into the canonical job shape.
-3. Upserts the company.
-4. Matches by source ID, canonical URL, external apply URL, and conservative title/company/location signals.
-5. Updates the canonical job without creating duplicates.
-6. Records the source/provenance.
-7. Creates a `JobSnapshot` only for a new job or a detected content change.
-
-The PostgreSQL schema already contained the required job, company, source and snapshot tables, so Phase 5 does not require a new migration.
-
-## Phase 4 detail API
-
-Resolve a single LinkedIn job into canonical data without persistence:
-
-`POST /api/v1/providers/apify/details`
 
 ## Local development
 
@@ -79,7 +75,7 @@ Web: http://localhost:3000
 3. Search provider integration — complete
 4. Job detail extraction — complete
 5. Normalization, deduplication and history — complete
-6. Dashboard data integration
+6. Dashboard data integration — complete
 7. Candidate profile
 8. AI scoring
 9. Notifications
