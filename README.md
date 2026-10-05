@@ -4,7 +4,7 @@ Production-oriented LinkedIn Job Intelligence application.
 
 ## Current status
 
-Phase 4 is implemented.
+Phase 5 is implemented.
 
 Implemented foundation:
 - FastAPI backend
@@ -20,32 +20,44 @@ Implemented foundation:
 - salary, location, timestamp and applicant parsing
 - ATS/apply URL detection
 - job-state and repost signals
+- PostgreSQL job/company upsert
+- deterministic job identity and deduplication
+- source provenance records
+- change-only historical snapshots
 - unit and API contract tests
 - GitHub Actions CI
 
+## Phase 5 persistence API
+
+Import one LinkedIn job from Apify and persist it:
+
+`POST /api/v1/jobs/import`
+
+Example:
+
+```json
+{
+  "source_job_id": "4459772101",
+  "discovered_from": "manual"
+}
+```
+
+The import flow:
+1. Fetches the current job detail from Apify.
+2. Normalizes it into the canonical job shape.
+3. Upserts the company.
+4. Matches by source ID, canonical URL, external apply URL, and conservative title/company/location signals.
+5. Updates the canonical job without creating duplicates.
+6. Records the source/provenance.
+7. Creates a `JobSnapshot` only for a new job or a detected content change.
+
+The PostgreSQL schema already contained the required job, company, source and snapshot tables, so Phase 5 does not require a new migration.
+
 ## Phase 4 detail API
 
-Resolve a single LinkedIn job into canonical data:
+Resolve a single LinkedIn job into canonical data without persistence:
 
 `POST /api/v1/providers/apify/details`
-
-Request:
-
-```json
-{
-  "source_job_id": "4459772101"
-}
-```
-
-or:
-
-```json
-{
-  "job_url": "https://www.linkedin.com/jobs/view/4459772101"
-}
-```
-
-Phase 4 does not persist the result yet. Phase 5 will add persistence, deduplication and historical snapshots.
 
 ## Local development
 
@@ -66,7 +78,7 @@ Web: http://localhost:3000
 2. Database/domain models and search compiler — complete
 3. Search provider integration — complete
 4. Job detail extraction — complete
-5. Normalization, deduplication and history
+5. Normalization, deduplication and history — complete
 6. Dashboard data integration
 7. Candidate profile
 8. AI scoring
