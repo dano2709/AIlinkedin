@@ -33,6 +33,18 @@ def test_builds_current_filter_payload() -> None:
     assert payload["under10Applicants"] is True
 
 
+def test_remote_flag_maps_to_provider_work_type() -> None:
+    adapter = ApifyLinkedInAdapter(token="test")
+    payload = adapter._build_search_payload(
+        JobSearchInput(
+            search_text="Python Developer",
+            provider_config={"remote": True, "rows": 10},
+        )
+    )
+
+    assert payload["workTypes"] == ["2"]
+
+
 def test_maps_actor_row_to_candidate() -> None:
     adapter = ApifyLinkedInAdapter(token="test")
     candidate = adapter._to_candidate(
