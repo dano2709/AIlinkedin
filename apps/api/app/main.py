@@ -81,7 +81,11 @@ async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse
 
     provider_config = dict(compiled.structured_constraints)
     provider_config["rows"] = settings.apify_default_rows
-    provider_config["source_url"] = compiled.linkedin_url if payload.source_url else None
+    provider_config["source_url"] = (
+        compiled.linkedin_url
+        if payload.source_url and "source_url" not in compiled.unsupported_constraints
+        else None
+    )
 
     # Import filtering remains deterministic and provider-independent.
     provider_config["exclude_keywords"] = compiled.deterministic_filters.exclude_keywords
