@@ -1,3 +1,4 @@
+import asyncio
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -68,9 +69,5 @@ def test_openai_provider_parses_response_json() -> None:
     provider = OpenAIResponsesScoringProvider("test-key")
     provider.client = SimpleNamespace(responses=FakeResponses())
 
-    import asyncio
-
-    result = asyncio.run(
-        provider.score(profile, {"title": "Developer"})
-    )
-    assert result.fit_score if False else result.recommendation == "strong_match"
+    result = asyncio.run(provider.score(profile, {"title": "Developer"}))
+    assert result.recommendation == "strong_match"
