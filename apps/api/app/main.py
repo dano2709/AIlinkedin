@@ -2,6 +2,7 @@ from dataclasses import asdict
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from .dashboard_schemas import (
@@ -38,6 +39,14 @@ app = FastAPI(
     title=settings.app_name,
     version="0.6.0",
     description="LinkedIn Job Intelligence API",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.web_origin],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 compiler = SearchQueryCompiler()
@@ -216,7 +225,7 @@ async def import_job(
 )
 def dashboard_overview(session: Session = db_dependency) -> DashboardOverviewResponse:
     overview = DashboardService(session).overview()
-    return DashboardOverviewResponse(**overview.__dict__)
+    return DashboardOverviewResponse(**asdict(overview))
 
 
 @app.get(
@@ -250,7 +259,7 @@ def dashboard_jobs(
         total=total,
         offset=offset,
         limit=limit,
-        jobs=[DashboardJobResponse(**job.__dict__) for job in jobs],
+        jobs=[DashboardJobResponse(**asdict(job)) for job in jobs],
     )
 
 
@@ -268,5 +277,5 @@ def dashboard_search_runs(
 
     runs = DashboardService(session).recent_search_runs(limit=limit)
     return DashboardSearchRunsResponse(
-        runs=[DashboardSearchRunResponse(**run.__dict__) for run in runs],
+        runs=[DashboardSearchRunResponse(**asdict(run)) for run in runs],
     )
