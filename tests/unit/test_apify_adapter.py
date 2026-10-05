@@ -1,6 +1,6 @@
 import pytest
 
-from apps.api.app.domain.providers import JobSearchInput
+from apps.api.app.domain.providers import JobDetailInput, JobSearchInput
 from apps.api.app.providers.apify_linkedin import ApifyLinkedInAdapter
 
 
@@ -57,4 +57,4 @@ def test_detail_requires_identifier() -> None:
     adapter = ApifyLinkedInAdapter(token="test")
     with pytest.raises(ValueError):
         import asyncio
-        asyncio.run(adapter.get_job_details(__import__("apps.api.app.domain.providers", fromlist=["JobDetailInput"]).JobDetailInput()))
+        asyncio.run(adapter.get_job_details(JobDetailInput()))
