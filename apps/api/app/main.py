@@ -69,6 +69,12 @@ def compile_search(payload: SearchQueryInput) -> CompiledSearchResponse:
     )
 
 
+@app.get("/api/v1/providers/apify/health", tags=["provider"])
+async def apify_health() -> dict[str, object]:
+    adapter = _apify_adapter()
+    return await adapter.health_check()
+
+
 @app.post("/api/v1/providers/apify/search", response_model=ProviderSearchResponse, tags=["provider"])
 async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse:
     compiled = compiler.compile(SearchQuery(**payload.model_dump()))
