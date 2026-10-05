@@ -155,7 +155,7 @@ def parse_posted_at(
     published = clean_text(published_at)
     if published:
         try:
-            return _utc(datetime.fromisoformat(published.replace("Z", "+00:00"))), "exact"
+            return _utc(datetime.fromisoformat(published)), "exact"
         except ValueError:
             try:
                 return datetime.strptime(published, "%Y-%m-%d").replace(tzinfo=timezone.utc), "date"
