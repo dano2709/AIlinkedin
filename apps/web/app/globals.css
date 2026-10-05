@@ -1,0 +1,128 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111827;
+  background: #f6f7f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 72px 28px 96px;
+}
+
+.hero {
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+h1 {
+  margin: 12px 0;
+  font-size: clamp(44px, 7vw, 76px);
+  line-height: 0.95;
+}
+
+.hero p {
+  max-width: 650px;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.card,
+.panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.card {
+  padding: 24px;
+}
+
+.card span,
+.card small {
+  display: block;
+  color: #6b7280;
+}
+
+.card strong {
+  display: block;
+  margin: 10px 0;
+  font-size: 38px;
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 24px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panel-heading h2 {
+  margin: 8px 0 0;
+}
+
+.status {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.stage {
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.stage-index {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+@media (max-width: 800px) {
+  .stats,
+  .pipeline {
+    grid-template-columns: 1fr;
+  }
+}
