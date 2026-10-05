@@ -73,7 +73,7 @@ class CandidateProfile(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True
     )
-    profile: Mapped[dict] = mapped_column(JSONB, default=dict)
+    profile: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -102,7 +102,7 @@ class Search(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(160))
-    config: Mapped[dict] = mapped_column(JSONB, default=dict)
+    config: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_successful_run: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -130,8 +130,8 @@ class SearchRun(Base):
         UUID(as_uuid=True), ForeignKey("providers.id", ondelete="SET NULL"), index=True
     )
     status: Mapped[str] = mapped_column(String(40), default="QUEUED")
-    query_snapshot: Mapped[dict] = mapped_column(JSONB, default=dict)
-    metrics: Mapped[dict] = mapped_column(JSONB, default=dict)
+    query_snapshot: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
+    metrics: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -149,7 +149,7 @@ class ProviderRun(Base):
     )
     status: Mapped[str] = mapped_column(String(40))
     error_code: Mapped[str | None] = mapped_column(String(80))
-    metrics: Mapped[dict] = mapped_column(JSONB, default=dict)
+    metrics: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -166,7 +166,7 @@ class Company(Base):
     name: Mapped[str] = mapped_column(String(255), index=True)
     normalized_name: Mapped[str] = mapped_column(String(255), index=True)
     url: Mapped[str | None] = mapped_column(Text)
-    enrichment: Mapped[dict] = mapped_column(JSONB, default=dict)
+    enrichment: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -213,15 +213,15 @@ class Job(Base):
     salary_currency: Mapped[str | None] = mapped_column(String(12))
     salary_period: Mapped[str | None] = mapped_column(String(30))
     description: Mapped[str | None] = mapped_column(Text)
-    responsibilities: Mapped[list] = mapped_column(JSONB, default=list)
-    requirements: Mapped[list] = mapped_column(JSONB, default=list)
-    preferred_qualifications: Mapped[list] = mapped_column(JSONB, default=list)
-    benefits: Mapped[list] = mapped_column(JSONB, default=list)
-    skills: Mapped[list] = mapped_column(JSONB, default=list)
-    technologies: Mapped[list] = mapped_column(JSONB, default=list)
-    certifications: Mapped[list] = mapped_column(JSONB, default=list)
-    education: Mapped[list] = mapped_column(JSONB, default=list)
-    languages: Mapped[list] = mapped_column(JSONB, default=list)
+    responsibilities: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    requirements: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    preferred_qualifications: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    benefits: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    technologies: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    certifications: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    education: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    languages: Mapped[list[str]] = mapped_column(JSONB, default=list)
     applicant_count: Mapped[int | None] = mapped_column(Integer)
     apply_type: Mapped[str | None] = mapped_column(String(60))
     apply_url: Mapped[str | None] = mapped_column(Text)
@@ -269,7 +269,7 @@ class JobSource(Base):
     search_run_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("search_runs.id", ondelete="SET NULL")
     )
-    provenance: Mapped[dict] = mapped_column(JSONB, default=dict)
+    provenance: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     job: Mapped["Job"] = relationship(back_populates="sources")
@@ -290,7 +290,7 @@ class JobSnapshot(Base):
     location_hash: Mapped[str | None] = mapped_column(String(64))
     apply_url_hash: Mapped[str | None] = mapped_column(String(64))
     applicant_count: Mapped[int | None] = mapped_column(Integer)
-    payload: Mapped[dict] = mapped_column(JSONB, default=dict)
+    payload: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
 
     job: Mapped["Job"] = relationship(back_populates="snapshots")
 
@@ -306,7 +306,7 @@ class JobSearchMatch(Base):
         UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True
     )
     discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    match_reason: Mapped[dict] = mapped_column(JSONB, default=dict)
+    match_reason: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
 
     search: Mapped["Search"] = relationship(back_populates="matches")
     job: Mapped["Job"] = relationship(back_populates="matches")
@@ -345,7 +345,7 @@ class JobAIAnalysis(Base):
     )
     model: Mapped[str] = mapped_column(String(120))
     prompt_version: Mapped[str] = mapped_column(String(80))
-    result: Mapped[dict] = mapped_column(JSONB, default=dict)
+    result: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     job: Mapped["Job"] = relationship(back_populates="analyses")
@@ -363,7 +363,7 @@ class CandidateJobScore(Base):
     )
     fit_score: Mapped[int] = mapped_column(Integer)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3))
-    breakdown: Mapped[dict] = mapped_column(JSONB, default=dict)
+    breakdown: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint("profile_id", "job_id", name="uq_profile_job_score"),)
@@ -421,7 +421,7 @@ class Notification(Base):
     )
     type: Mapped[str] = mapped_column(String(80), index=True)
     fingerprint: Mapped[str] = mapped_column(String(128), unique=True, index=True)
-    payload: Mapped[dict] = mapped_column(JSONB, default=dict)
+    payload: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -445,7 +445,7 @@ class ParserVersion(Base):
     source: Mapped[str] = mapped_column(String(80), index=True)
     version: Mapped[str] = mapped_column(String(80), unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    parser_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    parser_metadata: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
 
 
 class SystemEvent(Base):
@@ -454,7 +454,7 @@ class SystemEvent(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     event_type: Mapped[str] = mapped_column(String(100), index=True)
     severity: Mapped[str] = mapped_column(String(30), default="INFO")
-    payload: Mapped[dict] = mapped_column(JSONB, default=dict)
+    payload: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -464,5 +464,5 @@ class ErrorEvent(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     error_code: Mapped[str] = mapped_column(String(100), index=True)
     message: Mapped[str] = mapped_column(Text)
-    context: Mapped[dict] = mapped_column(JSONB, default=dict)
+    context: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
