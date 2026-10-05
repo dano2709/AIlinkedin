@@ -1,0 +1,35 @@
+[project]
+name = "ailinkedin-api"
+version = "0.1.0"
+description = "AIlinkedin Job Intelligence API"
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi>=0.120,<1.0",
+  "uvicorn[standard]>=0.38,<1.0",
+  "pydantic>=2.12,<3.0",
+  "pydantic-settings>=2.11,<3.0",
+  "sqlalchemy>=2.0,<3.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "alembic>=1.17,<2.0",
+  "redis>=6.4,<7.0",
+  "dramatiq[redis]>=2.0,<3.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<9.0",
+  "httpx>=0.28,<1.0",
+  "ruff>=0.14,<1.0",
+  "mypy>=1.18,<2.0"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["../../tests"]
