@@ -1,10 +1,20 @@
+from dataclasses import asdict
+
 from fastapi import FastAPI, HTTPException
 
-from .domain import JobSearchInput, SearchQuery, SearchQueryCompiler
+from .domain import (
+    JobDetailExtractor,
+    JobDetailInput,
+    JobSearchInput,
+    SearchQuery,
+    SearchQueryCompiler,
+)
 from .providers.apify_linkedin import ApifyLinkedInAdapter, ProviderError
 from .schemas import (
     CompiledSearchResponse,
     JobCandidateResponse,
+    JobDetailRequest,
+    JobDetailResponse,
     ProviderSearchResponse,
     SearchQueryInput,
 )
@@ -12,11 +22,12 @@ from .settings import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.3.0",
+    version="0.4.0",
     description="LinkedIn Job Intelligence API",
 )
 
 compiler = SearchQueryCompiler()
+detail_extractor = JobDetailExtractor()
 
 
 def _apify_adapter() -> ApifyLinkedInAdapter:
@@ -39,8 +50,8 @@ def health() -> dict[str, str]:
 def meta() -> dict[str, str]:
     return {
         "name": settings.app_name,
-        "version": "0.3.0",
-        "status": "phase-3",
+        "version": "0.4.0",
+        "status": "phase-4",
     }
 
 
@@ -86,8 +97,6 @@ async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse
         if payload.source_url and "source_url" not in compiled.unsupported_constraints
         else None
     )
-
-    # Import filtering remains deterministic and provider-independent.
     provider_config["exclude_keywords"] = compiled.deterministic_filters.exclude_keywords
 
     try:
@@ -117,3 +126,28 @@ async def search_with_apify(payload: SearchQueryInput) -> ProviderSearchResponse
             for c in candidates
         ],
     )
+
+
+@app.post(
+    "/api/v1/providers/apify/details",
+    response_model=JobDetailResponse,
+    tags=["provider"],
+)
+async def detail_with_apify(payload: JobDetailRequest) -> JobDetailResponse:
+    try:
+        result = await _apify_adapter().get_job_details(
+            JobDetailInput(
+                source_job_id=payload.source_job_id,
+                job_url=payload.job_url,
+            )
+        )
+        canonical = detail_extractor.extract(
+            result.raw,
+            provenance=result.provenance,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return JobDetailResponse.model_validate(asdict(canonical))
