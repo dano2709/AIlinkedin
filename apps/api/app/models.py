@@ -292,6 +292,8 @@ class JobSnapshot(Base):
     applicant_count: Mapped[int | None] = mapped_column(Integer)
     payload: Mapped[dict] = mapped_column(JSONB, default=dict)
 
+    job: Mapped["Job"] = relationship(back_populates="snapshots")
+
 
 class JobSearchMatch(Base):
     __tablename__ = "job_search_matches"
@@ -443,7 +445,7 @@ class ParserVersion(Base):
     source: Mapped[str] = mapped_column(String(80), index=True)
     version: Mapped[str] = mapped_column(String(80), unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    parser_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
 class SystemEvent(Base):
