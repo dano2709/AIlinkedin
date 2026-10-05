@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Overview = {
   total_jobs: number;
@@ -82,7 +82,7 @@ export default function DashboardClient() {
     return params.toString();
   }, [query, remoteOnly]);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setRefreshing(true);
     setError(null);
     try {
@@ -98,11 +98,11 @@ export default function DashboardClient() {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [jobQuery]);
 
   useEffect(() => {
     void refresh();
-  }, [jobQuery]);
+  }, [refresh]);
 
   return (
     <main>
