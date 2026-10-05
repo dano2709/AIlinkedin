@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -7,7 +7,7 @@ from apps.api.app.main import app
 
 
 class FakeAdapter:
-    async def get_job_details(self, job):  # type: ignore[no-untyped-def]
+    async def get_job_details(self, job: Any) -> JobDetailResult:
         return JobDetailResult(
             raw={
                 "id": "123",
@@ -31,7 +31,7 @@ class FakeAdapter:
         )
 
 
-def test_detail_endpoint_returns_canonical_job(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_detail_endpoint_returns_canonical_job(monkeypatch: Any) -> None:
     monkeypatch.setattr("apps.api.app.main._apify_adapter", lambda: FakeAdapter())
     response = TestClient(app).post(
         "/api/v1/providers/apify/details",
