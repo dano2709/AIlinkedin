@@ -308,3 +308,80 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.profile-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profile-grid input,
+.profile-grid textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  outline: none;
+}
+
+.profile-grid textarea {
+  resize: vertical;
+}
+
+.profile-grid input:focus,
+.profile-grid textarea:focus {
+  border-color: #111827;
+}
+
+.profile-wide {
+  grid-column: 1 / -1;
+}
+
+.checkbox-field {
+  align-self: end;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 9px !important;
+  min-height: 42px;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.save-message {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+@media (max-width: 800px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-wide {
+    grid-column: auto;
+  }
+}
