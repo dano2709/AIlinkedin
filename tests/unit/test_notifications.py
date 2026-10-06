@@ -1,4 +1,5 @@
 import asyncio
+
 import pytest
 
 from apps.api.app.notification_schemas import NotificationPreferencesInput
