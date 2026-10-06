@@ -3,23 +3,29 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class NotificationPreferencesInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
-    email: str = Field(min_length=3, max_length=320)
+    email: str = Field(default="", max_length=320)
     min_fit_score: int = Field(default=80, ge=0, le=100)
 
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str) -> str:
         normalized = value.strip().lower()
-        if "@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]:
+        if normalized and ("@" not in normalized or "." not in normalized.rsplit("@", 1)[-1]):
             raise ValueError("email must be valid")
         return normalized
+
+    @model_validator(mode="after")
+    def require_email_when_enabled(self) -> "NotificationPreferencesInput":
+        if self.enabled and not self.email:
+            raise ValueError("email is required when notifications are enabled")
+        return self
 
 
 class NotificationPreferencesResponse(BaseModel):
