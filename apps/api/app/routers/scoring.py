@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -67,7 +68,7 @@ async def score_job(
                 score_payload=dict(data["breakdown"]),
             )
             session.commit()
-        except Exception:
+        except SQLAlchemyError:
             session.rollback()
     except ValueError as exc:
         session.rollback()
