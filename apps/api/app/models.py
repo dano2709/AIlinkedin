@@ -64,6 +64,9 @@ class User(Base):
     searches: Mapped[list["Search"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    notification_preferences: Mapped["NotificationPreference | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class CandidateProfile(Base):
@@ -436,6 +439,24 @@ class NotificationDelivery(Base):
     status: Mapped[str] = mapped_column(String(40), default="PENDING")
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(320))
+    min_fit_score: Mapped[int] = mapped_column(Integer, default=80, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    user: Mapped["User"] = relationship(back_populates="notification_preferences")
 
 
 class ParserVersion(Base):
