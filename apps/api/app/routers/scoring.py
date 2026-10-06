@@ -9,6 +9,7 @@ from ..db import get_db
 from ..providers.openai_scoring import OpenAIResponsesScoringProvider
 from ..scoring_schemas import JobScoreRequest, JobScoreResponse
 from ..services.job_scoring_core import JobScoringService, ScoringProviderError
+from ..services.notifications import NotificationService
 from ..settings import settings
 
 
@@ -58,6 +59,16 @@ async def score_job(
             force=payload.force,
         )
         session.commit()
+        try:
+            await NotificationService(session).notify_high_fit(
+                UUID(settings.default_user_id),
+                job_id,
+                fit_score=int(data["fit_score"]),
+                score_payload=dict(data["breakdown"]),
+            )
+            session.commit()
+        except Exception:
+            session.rollback()
     except ValueError as exc:
         session.rollback()
         raise HTTPException(status_code=404, detail=str(exc)) from exc
