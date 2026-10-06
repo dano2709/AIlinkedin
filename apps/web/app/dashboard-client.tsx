@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import CandidateProfileClient from "./candidate-profile-client";
+import NotificationsClient from "./notifications-client";
 
 type Overview = {
   total_jobs: number;
@@ -268,6 +269,8 @@ export default function DashboardClient() {
       </section>
 
       <CandidateProfileClient />
+
+      <NotificationsClient />
 
       <section className="panel pipeline-panel">
         <div className="panel-heading">
