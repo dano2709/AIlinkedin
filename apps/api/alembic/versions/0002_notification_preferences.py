@@ -16,6 +16,10 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.add_column(
+        "notification_deliveries",
+        sa.Column("provider_message_id", sa.String(length=255), nullable=True),
+    )
     op.create_table(
         "notification_preferences",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -48,5 +52,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_column("notification_deliveries", "provider_message_id")
     op.drop_index("ix_notification_preferences_user_id", table_name="notification_preferences")
     op.drop_table("notification_preferences")
