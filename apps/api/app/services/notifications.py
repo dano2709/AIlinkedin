@@ -10,7 +10,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import (
-    CandidateJobScore,
     Company,
     Job,
     Notification,
@@ -221,7 +220,7 @@ class NotificationService:
 
         delivery.status = "SENT"
         delivery.sent_at = datetime.now(timezone.utc)
-        delivery.error = message_id
+        delivery.provider_message_id = message_id
         self.session.flush()
         return NotificationDispatchResult(
             status="sent",
