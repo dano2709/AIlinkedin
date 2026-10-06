@@ -3,6 +3,7 @@ from .dashboard import DashboardService
 from .job_import import ApifyJobImportService
 from .job_persistence import JobPersistenceService, PersistenceResult
 from .job_scoring_core import JobScoringService, ScoringProviderError, weighted_fit_score
+from .notifications import NotificationPreferencesData, NotificationService
 
 __all__ = [
     "ApifyJobImportService",
@@ -12,6 +13,8 @@ __all__ = [
     "DashboardService",
     "JobPersistenceService",
     "JobScoringService",
+    "NotificationPreferencesData",
+    "NotificationService",
     "PersistenceResult",
     "ScoringProviderError",
     "weighted_fit_score",
