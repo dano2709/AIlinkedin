@@ -4,7 +4,7 @@ Production-oriented LinkedIn Job Intelligence application.
 
 ## Current status
 
-Phase 7 is implemented.
+Phase 9 is implemented.
 
 Implemented foundation:
 - FastAPI backend
@@ -38,6 +38,9 @@ Implemented foundation:
 - candidate profile GET/PUT API
 - editable candidate profile dashboard section
 - unit and API contract tests
+- high-fit notification preferences and history
+- Brevo transactional email delivery
+- deduplicated high-fit notification dispatch
 - GitHub Actions CI
 
 ## Phase 6 dashboard API
@@ -86,6 +89,24 @@ The profile is stored in the existing `candidate_profiles.profile` JSONB field. 
 
 The current API uses `DEFAULT_USER_ID` as an explicit development-only identity until authentication is introduced.
 
+## Phase 9 notifications API
+
+Read notification settings:
+
+`GET /api/v1/notifications/preferences`
+
+Update notification settings:
+
+`PUT /api/v1/notifications/preferences`
+
+Read recent notification history:
+
+`GET /api/v1/notifications?limit=20`
+
+A scored job above the configured Fit Score threshold creates one deduplicated notification and attempts transactional email delivery through Brevo. Delivery failures are persisted without failing the job-scoring request.
+
+The sender address and Brevo API key remain server-side environment settings. Brevo uses the transactional email endpoint `POST /v3/smtp/email`.
+
 ## Phase 5 persistence API
 
 Import one LinkedIn job from Apify and persist it:
@@ -115,7 +136,6 @@ Web: http://localhost:3000
 6. Dashboard data integration — complete
 7. Candidate profile — complete
 8. AI scoring — complete
-8. AI scoring
-9. Notifications
+9. Notifications — complete
 10. Provider fallback
 11. Observability and production hardening
