@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     default_user_id: str = "00000000-0000-0000-0000-000000000001"
     openai_model: str = "gpt-6-luna"
     openai_timeout_seconds: float = 60.0
+    brevo_api_key: str = ""
+    brevo_base_url: str = "https://api.brevo.com/v3"
+    notification_sender_email: str = ""
+    notification_sender_name: str = "AIlinkedin"
+    notification_timeout_seconds: float = 20.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
