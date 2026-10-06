@@ -437,6 +437,7 @@ class NotificationDelivery(Base):
     )
     channel: Mapped[str] = mapped_column(String(40))
     status: Mapped[str] = mapped_column(String(40), default="PENDING")
+    provider_message_id: Mapped[str | None] = mapped_column(String(255))
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
 
